@@ -1,8 +1,9 @@
 [package]
 name = "rateless-tables"
-version = "0.2.1"
+version = "0.2.2"
 edition = "2024"
 
 [dependencies]
 libm = "0.2.15"
 serde = { version = "1.0.228", features = ["derive"] }
+serde_bytes = "0.11.19"

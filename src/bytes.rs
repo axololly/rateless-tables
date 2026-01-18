@@ -1,6 +1,7 @@
 extern crate alloc;
 
 use alloc::vec::Vec;
+use serde::{Deserialize, Serialize};
 
 use core::{cmp::Ordering, fmt::{Debug, Display, Formatter, Result as FmtResult}, hash::{Hash, Hasher}, marker::PhantomData};
 
@@ -11,9 +12,11 @@ pub trait Bytes {
     fn to_bytes(&self) -> Vec<u8>;
 }
 
-#[derive(Default)]
+#[derive(Default, Deserialize, Serialize)]
 pub struct AsBytes<T> {
     _marker: PhantomData<T>,
+
+    #[serde(with = "serde_bytes")]
     bytes: Vec<u8>
 }
 
@@ -83,9 +86,11 @@ impl<T> Clone for AsBytes<T> {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Deserialize, Serialize)]
 pub struct AsVariableBytes<T> {
     _marker: PhantomData<T>,
+
+    #[serde(with = "serde_bytes")]
     bytes: Vec<u8>
 }
 
