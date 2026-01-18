@@ -21,9 +21,19 @@ pub(crate) struct HashedSymbol<T: Symbol> {
 
 #[derive(Clone, Copy, Default, Deserialize, Hash, PartialEq, Eq, PartialOrd, Ord, Serialize)]
 pub struct CodedSymbol<T: Symbol> {
-    pub symbol: T,
-    pub hash: u64,
-    pub count: i64
+    pub(crate) symbol: T,
+    pub(crate) hash: u64,
+    pub(crate) count: i64
+}
+
+impl<T: Symbol> CodedSymbol<T> {
+    pub fn symbol(&self) -> &T {
+        &self.symbol
+    }
+
+    pub fn hash(&self) -> u64 {
+        self.hash
+    }
 }
 
 #[derive(Clone, Copy, Debug)]
