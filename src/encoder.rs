@@ -1,6 +1,3 @@
-extern crate alloc;
-use alloc::vec::Vec;
-
 use crate::{index::IndexGenerator, symbol::{CodedSymbol, HashedSymbol, Op, Symbol}};
 
 struct SymbolMap {
@@ -68,18 +65,16 @@ pub(crate) struct CodingWindow<T: Symbol> {
 
 impl<T: Symbol> CodingWindow<T> {
     pub fn add_symbol(&mut self, symbol: T) {
+        let hash = symbol.get_hash();
+        
         let hashed_symbol = HashedSymbol {
-            hash: symbol.hash(),
+            hash,
             symbol
         };
 
-        self.add_hashed_symbol(hashed_symbol);
-    }
+        let index_gen = IndexGenerator::new(hash, 0);
 
-    pub fn add_hashed_symbol(&mut self, symbol: HashedSymbol<T>) {
-        let index_gen = IndexGenerator::new(symbol.hash, 0);
-
-        self.add_hashed_symbol_with_mapping(symbol, index_gen);
+        self.add_hashed_symbol_with_mapping(hashed_symbol, index_gen);
     }
 
     pub(crate) fn add_hashed_symbol_with_mapping(&mut self, symbol: HashedSymbol<T>, index_gen: IndexGenerator) {
@@ -136,10 +131,6 @@ pub struct Encoder<T: Symbol>(CodingWindow<T>);
 impl<T: Symbol> Encoder<T> {
     pub fn add_symbol(&mut self, symbol: T) {
         self.0.add_symbol(symbol);
-    }
-
-    pub fn add_hashed_symbol(&mut self, symbol: HashedSymbol<T>) {
-        self.0.add_hashed_symbol(symbol);
     }
 
     pub fn reset(&mut self) {

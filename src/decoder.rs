@@ -1,5 +1,4 @@
-extern crate alloc;
-use alloc::vec::Vec;
+use std::{fmt::Debug, hash::Hash};
 
 use crate::{encoder::CodingWindow, index::IndexGenerator, symbol::{CodedSymbol, HashedSymbol, Op, Symbol}};
 
@@ -13,30 +12,13 @@ pub struct Decoder<T: Symbol> {
     decoded: usize
 }
 
-impl<T: Symbol> Decoder<T> {
+impl<T: Symbol + Debug + Hash> Decoder<T> {
     pub fn is_done(&self) -> bool {
         self.decoded == self.symbols.len()
     }
 
-    pub fn local(&self) -> &[HashedSymbol<T>] {
-        self.local.symbols.as_slice()
-    }
-
-    pub fn remote(&self) -> &[HashedSymbol<T>] {
-        self.remote.symbols.as_slice()
-    }
-
     pub fn add_symbol(&mut self, symbol: T) {
-        let hashed_symbol = HashedSymbol {
-            hash: symbol.hash(),
-            symbol
-        };
-
-        self.add_hashed_symbol(hashed_symbol);
-    }
-
-    pub fn add_hashed_symbol(&mut self, symbol: HashedSymbol<T>) {
-        self.window.add_hashed_symbol(symbol);
+        self.window.add_symbol(symbol);
     }
 
     pub fn add_coded_symbol(&mut self, coded_symbol: CodedSymbol<T>) {
@@ -46,7 +28,7 @@ impl<T: Symbol> Decoder<T> {
         cs = self.remote.apply_window(cs, Op::Remove);
         cs = self.local.apply_window(cs, Op::Add);
 
-        if (cs.count == 1 || cs.count == -1) && cs.hash == cs.symbol.hash()
+        if (cs.count == 1 || cs.count == -1) && cs.hash == cs.symbol.get_hash()
             || cs.count == 0 && cs.hash == 0
         {
             self.decodable.push(self.symbols.len());
@@ -65,7 +47,7 @@ impl<T: Symbol> Decoder<T> {
             
             cs.apply(symbol, op);
 
-            if (cs.count == -1 || cs.count == 1) && cs.hash == cs.symbol.hash() {
+            if (cs.count == -1 || cs.count == 1) && cs.hash == cs.symbol.get_hash() {
                 self.decodable.push(idx);
             }
 
@@ -78,6 +60,8 @@ impl<T: Symbol> Decoder<T> {
     pub fn try_decode(&mut self) -> Result<(), i64> {
         for idx in core::mem::take(&mut self.decodable) {
             let cs = &self.symbols[idx];
+
+            // println!("[DEBUG] decoding: {:?} (count: {})", cs.symbol, cs.count);
 
             match cs.count {
                 1 => {
@@ -122,17 +106,25 @@ impl<T: Symbol> Decoder<T> {
     }
 
     pub fn consume(self) -> (Vec<T>, Vec<T>) {
-        let local = self.local
+        let mut local: Vec<T> = self.local
             .symbols
             .into_iter()
             .map(|s| s.symbol)
             .collect();
 
-        let remote = self.remote
+        local.sort_by(|a, b| Ord::cmp(a, b));
+
+        local.dedup_by(|a, b| a == b);
+
+        let mut remote :Vec<T> = self.remote
             .symbols
             .into_iter()
             .map(|s| s.symbol)
             .collect();
+
+        remote.sort_by(|a, b| Ord::cmp(a, b));
+
+        remote.dedup_by(|a, b| a == b);
 
         (remote, local)
     }
@@ -146,10 +138,8 @@ impl<T: Symbol> Decoder<T> {
 
         self.decoded = 0;
     }
-}
 
-impl<T: Symbol> Extend<T> for Decoder<T> {
-    fn extend<U: IntoIterator<Item = T>>(&mut self, iter: U) {
+    pub fn extend<U: IntoIterator<Item = T>>(&mut self, iter: U) {
         for symbol in iter {
             self.add_symbol(symbol);
         }

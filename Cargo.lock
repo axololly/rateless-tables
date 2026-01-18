@@ -27,7 +27,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "rateless_tables"
+name = "rateless-tables"
 version = "0.1.0"
 dependencies = [
  "libm",

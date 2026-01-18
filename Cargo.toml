@@ -5,4 +5,25 @@ edition = "2024"
 
 [dependencies]
 libm = "0.2.15"
-serde = { version = "1.0.228", default-features = false, features = ["alloc", "derive"] }
+
+# [dependencies.chrono]
+# version = "0.4.43"
+# default-features = false
+# features = ["clock"]
+
+# [dependencies.foldhash]
+# version = "0.2.0"
+# default-features = false
+
+# [dependencies.hashbrown]
+# version = "0.16.1"
+# features = ["alloc", "core"]
+
+[dependencies.serde]
+version = "1.0.228"
+default-features = false
+features = ["alloc", "derive"]
+
+[features]
+std = []
+alloc = []

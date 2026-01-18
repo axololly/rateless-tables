@@ -1,17 +1,25 @@
+use std::hash::{DefaultHasher, Hash, Hasher};
 use serde::{Deserialize, Serialize};
 
-pub trait Symbol: Default {
+pub trait Symbol: Default + Hash + PartialEq + Ord {
     fn xor(&self, other: &Self) -> Self;
-    fn hash(&self) -> u64;
+    
+    fn get_hash(&self) -> u64 {
+        let mut hasher = DefaultHasher::new();
+
+        self.hash(&mut hasher);
+
+        hasher.finish()
+    }
 }
 
 #[derive(Clone, Copy, Default, PartialEq)]
-pub struct HashedSymbol<T: Symbol> {
+pub(crate) struct HashedSymbol<T: Symbol> {
     pub symbol: T,
     pub hash: u64
 }
 
-#[derive(Clone, Copy, Default, Deserialize, PartialEq, Serialize)]
+#[derive(Clone, Copy, Default, Deserialize, Hash, PartialEq, Eq, PartialOrd, Ord, Serialize)]
 pub struct CodedSymbol<T: Symbol> {
     pub symbol: T,
     pub hash: u64,
@@ -25,7 +33,7 @@ pub enum Op {
 }
 
 impl<T: Symbol> CodedSymbol<T> {
-    pub fn apply(&mut self, symbol: &HashedSymbol<T>, op: Op) {
+    pub(crate) fn apply(&mut self, symbol: &HashedSymbol<T>, op: Op) {
         self.symbol = self.symbol.xor(&symbol.symbol);
         self.hash ^= symbol.hash;
         self.count += op as i64;
