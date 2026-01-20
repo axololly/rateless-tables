@@ -1,4 +1,4 @@
-use std::{fmt::Debug, hash::Hash};
+use std::hash::Hash;
 
 use crate::{encoder::CodingWindow, index::IndexGenerator, symbol::{CodedSymbol, HashedSymbol, Op, Symbol}};
 
@@ -12,7 +12,7 @@ pub struct Decoder<T: Symbol> {
     decoded: usize
 }
 
-impl<T: Symbol + Debug + Hash> Decoder<T> {
+impl<T: Symbol + Hash> Decoder<T> {
     pub fn is_done(&self) -> bool {
         self.decoded == self.symbols.len()
     }
@@ -60,8 +60,6 @@ impl<T: Symbol + Debug + Hash> Decoder<T> {
     pub fn try_decode(&mut self) -> Result<(), i64> {
         for idx in core::mem::take(&mut self.decodable) {
             let cs = &self.symbols[idx];
-
-            // println!("[DEBUG] decoding: {:?} (count: {})", cs.symbol, cs.count);
 
             match cs.count {
                 1 => {
